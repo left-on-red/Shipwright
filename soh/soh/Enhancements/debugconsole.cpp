@@ -280,6 +280,43 @@ static bool ItemHandler(const std::vector<std::string>& args) {
     return CMD_SUCCESS;
 }
 
+const static std::map<std::string, int16_t> upgrades{
+    { "sticks", UPG_STICKS },
+    { "nuts", UPG_NUTS },
+    { "bullet_bag", UPG_BULLET_BAG },
+    { "bomb_bag", UPG_BOMB_BAG },
+    { "quiver", UPG_QUIVER },
+    { "strength", UPG_STRENGTH },
+    { "scale", UPG_SCALE },
+    { "wallet", UPG_WALLET }
+};
+
+static bool UpgradeHandler(const std::vector<std::string>& args) {
+    if (args.size() != 3) {
+        ERROR("[SOH] Unexpected arguments passed");
+        return CMD_FAILED;
+    }
+
+    const auto& selected = upgrades.find(args[1]);
+
+    if (selected == upgrades.end()) {
+        ERROR("Invalid upgrade passed");
+        return CMD_FAILED;
+    }
+
+    unsigned int index;
+    try {
+        index = std::stoi(args[2]);
+    } catch (std::invalid_argument const& ex) {
+        ERROR("[SOH] upgrade index must be an integer.");
+        return CMD_FAILED;
+    }
+    
+    Inventory_ChangeUpgrade(selected->second, index);
+
+    return CMD_SUCCESS;
+}
+
 static bool EntranceHandler(const std::vector<std::string>& args) {
     if (args.size() != 2) {
         ERROR("[SOH] Unexpected arguments passed");
@@ -415,6 +452,11 @@ void DebugConsole_Init(void) {
     CMD_REGISTER("item", { ItemHandler,
                              "Sets item ID in arg 1 into slot arg 2. No boundary checks. Use with caution.",
                              { { "slot", ArgumentType::NUMBER }, { "item id", ArgumentType::NUMBER } } });
+
+    CMD_REGISTER("upgrade", { UpgradeHandler,
+                                "Sets the upgrade item in arg 1 to upgrade index arg 2. No boundary checks. Use with caution.",
+                                { { "upgrade name", ArgumentType::TEXT }, { "upgrade index", ArgumentType::NUMBER } } });
+
     CMD_REGISTER("entrance",
                  { EntranceHandler, "Sends player to the entered entrance (hex)", { { "entrance", ArgumentType::NUMBER } } });
 
